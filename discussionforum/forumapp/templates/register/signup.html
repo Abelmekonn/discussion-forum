@@ -1,0 +1,28 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="{% static 'css/form.css' %}">
+</head>
+<body>
+    <form class="form" action="{% url 'signup' %}" method="post">
+        {% csrf_token %}
+        {% for message in messages %}
+            <h5 style="color: red;">{{message}}</h5>
+        {% endfor %}
+        <span class="signup">Sign Up</span>
+        <input type="text" placeholder="Name" class="form--input" name="username">
+        <input type="email" placeholder="Email address" class="form--input" name="email">
+        <input type="password" placeholder="Password" class="form--input" name="password">
+        <input type="password" placeholder="Confirm password" class="form--input" name="confirm_password">
+        
+        <button class="form--submit" type="submit">
+            Sign up
+        </button>
+    </form>
+    
+</body>
+</html>
