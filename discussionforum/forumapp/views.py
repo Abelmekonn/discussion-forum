@@ -28,6 +28,24 @@ def home(request):
         "user_profile":user_profile,
     }
     return render(request,"home.html",context)
+@login_required(login_url='signin')
+def posts_by_category(request, category):
+    posts = Post.objects.filter(category__name=category)  # Retrieve posts based on the category
+    category_name = Category.objects.get(name=category)  # Retrieve the category object
+    
+    # Retrieve comments for each post
+    post_comments = {}
+    for post in posts:
+        post_comments = Comment.objects.filter(post=post).all()
+        comment=post_comments[:2]
+        post_count=post_comments.count()
+    context = {
+        "category": category_name,
+        "posts": posts,
+        "comment": comment,
+        "post_count":post_count
+    }
+    return render(request, "posts/posts.html", context)
 def signin(request):
     if request.method == "POST":
         username = request.POST.get('username')
