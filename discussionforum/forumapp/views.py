@@ -1,4 +1,4 @@
-from django.shortcuts import render,redirect
+from django.shortcuts import render,redirect,get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import HttpResponse   
@@ -15,13 +15,13 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import auth
 
 from .models import Profile,Post,Comment,Category
+from .form import PostForm 
 # Create your views here.
 @login_required(login_url='signin')
 def home(request):
     user_object = User.objects.get(username=request.user.username)
     user_profile, created = Profile.objects.get_or_create(user=user_object)
     category=Category.objects.all()
-    
     
     context={
         'category':category,
