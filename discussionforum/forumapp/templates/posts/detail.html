@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>hi</h1>
+    {{post.content}}
+    <div class="image">
+        <!-- <img src="{{ post.post_img }}" alt="" style="width: 275px; height: 275px; "> -->
+        <img src="{{ post.imageURL }}" alt="Post Image" style="width: 275px; height: 275px;">
+    </div>    
+    <ul>
+    {% for comment in comment %}
+        <li>{{comment.content}}</li>
+    {% endfor %}
+    </ul>
+</body>
+</html> 

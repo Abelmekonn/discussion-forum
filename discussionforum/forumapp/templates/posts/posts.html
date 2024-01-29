@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts by Category</title>
+</head>
+<body>
+    <h1>Posts by Category: {{ category.name }}</h1>
+    <div class="post-list">
+        {% for post in posts %}
+            <div class="post">
+                <h2><a href="{% url 'detail'  post.id %}">{{ post.content }}</a></h2>
+                <p>{{ post.creator }}</p>
+                <div class="image">
+                    <!-- <img src="{{ post.post_img }}" alt="" style="width: 275px; height: 275px; "> -->
+                    <img src="{{ post.imageURL }}" alt="Post Image" style="width: 275px; height: 275px;">
+                </div>  
+                <h3>Comments</h3>
+                <ul>
+                    {% for comment in comment %}
+                        <li>{{ comment }}</li>
+                    {% endfor %}
+                </ul>
+                
+            </div>
+        {% endfor %}
+    </div>
+</body>
+</html>
