@@ -13,8 +13,9 @@ from django.core.mail import EmailMessage
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib import auth
+from itertools import chain
 
-from .models import Profile,Post,Comment,Category
+from .models import Profile,Post,Comment,Category,DiscussionThread
 from .form import PostForm 
 # Create your views here.
 @login_required(login_url='signin')
@@ -28,33 +29,111 @@ def home(request):
         "user_profile":user_profile,
     }
     return render(request,"home.html",context)
+
+
 @login_required(login_url='signin')
 def posts_by_category(request, category):
     posts = Post.objects.filter(category__name=category)  # Retrieve posts based on the category
     category_name = Category.objects.get(name=category)  # Retrieve the category object
     
     # Retrieve comments for each post
-    post_comments = {}
+    all_comments = []
     for post in posts:
-        post_comments = Comment.objects.filter(post=post).all()
-        comment=post_comments[:2]
-        post_count=post_comments.count()
+        post_comments = Comment.objects.filter(post=post).all()[:2]
+        all_comments.append(post_comments)
+    post_count = len(all_comments)  # Count the total comments
+
+    post_count = len(list(chain.from_iterable(all_comments)))  # Flatten list of lists to a single list
+
     context = {
-        "category": category_name,
-        "posts": posts,
-        "comment": comment,
-        "post_count":post_count
+    "category": category_name,
+    "posts": posts,
+    "comments": all_comments,  
+    "post_count": post_count
     }
     return render(request, "posts/posts.html", context)
+@login_required(login_url='signin')
+def detail(request,pk):
+    post = get_object_or_404(Post, id=pk)
+    post_comments = {}
+    post_comments = Comment.objects.filter(post=post).all()
+    comment=post_comments
+    # post_count=post_comments.count()
+    context={
+        "post":post,
+        "comment":comment
+    }
+    return render(request, "posts/detail.html" ,context)
+
+@login_required
+def upload_post(request):
+    if request.method == 'POST':
+        form = PostForm(request.POST, request.FILES)
+        if form.is_valid():
+            if form.cleaned_data['is_new_thread']:
+                # Create new thread and first post
+                thread = DiscussionThread.objects.create(title=form.cleaned_data['title'], creator=request.user)
+                post = form.save(commit=False)
+                post.thread = thread
+                post.creator = request.user
+                post.save()
+                return redirect('detail', pk=thread.pk)
+            else:
+                # Update existing post
+                post = form.save(commit=False)
+                post.creator = request.user
+                post.save()
+                return redirect('detail', pk=post.pk)
+    else:
+        form = PostForm()
+    context = {'form': form}
+    return render(request, 'posts/upload.html', context)
+
+@login_required(login_url='signin')
+def update_post(request, pk):
+    # Retrieve the post object using its UUID primary key
+    post = get_object_or_404(Post, id=pk)
+
+    # Ensure the user is authorized to edit the post
+    if post.creator != request.user:
+        return redirect('detail', pk=pk)  
+    if request.method == 'GET':
+        
+        form = PostForm(instance=post)
+        context = {'form': form, 'post': post}
+        return render(request, 'posts/update.html', context)
+    elif request.method == 'POST':
+        form = PostForm(request.POST, request.FILES, instance=post)  
+        if form.is_valid():
+            form.save()
+            return redirect('detail', pk=post.pk)  
+        else:
+            context = {'form': form, 'post': post}
+            return render(request, 'posts/update.html', context)
+    
+    return render(request, 'posts/update.html', context)
+
+@login_required(login_url='signin')
+def delete_post(request, pk):
+    post = get_object_or_404(Post, id=pk)
+
+    if post.creator != request.user:
+        messages.error(request, "You are not authorized to delete this post.")
+        return redirect('detail', pk=pk)
+
+    post.delete()
+    messages.success(request, "Post successfully deleted.")
+    return redirect('posts_by_category', category_name=post.category.name)  
+
 def signin(request):
     if request.method == "POST":
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = auth.authenticate(request, username=username, password=password)
         if user is not None:
-            if user.is_active:  # Check if the user is active
+            if user.is_active:  
                 auth.login(request, user)
-                return redirect('home')  # Redirect to the 'index' page
+                return redirect('home')  
             else:
                 messages.error(request, 'Your account is not active.')
                 return redirect('signin')
@@ -84,7 +163,6 @@ def signup(request):
                 user = User.objects.create_user(username=username, email=email, password=password)
                 user.is_active = False  # Set the user's status to inactive
                 user.save()
-
                 current_site = get_current_site(request)
                 mail_subject = 'Activation link has been sent to your email id'
                 message = render_to_string('acc_active_email.html', {
