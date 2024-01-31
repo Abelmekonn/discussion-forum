@@ -8,53 +8,70 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
     <link rel="stylesheet" href="{% static 'css/form.css' %}">
 </head>
-<body>
-    <nav class="container d-flex justify-content-between py-4">
-        <div class="logo">
-            <img src="/assets/images/forum_icon.png" alt="Logo"/>
-        </div>
-        <!-- if user authenticated it show logout and image -->
-        <div class="side">
-        {% if user.is_authenticated %}
-                <img src="{{ profile.imageURL }}" alt=""> 
+<body style="background-color: rgb(249, 249, 250);">
+    <header class="navbar" style="background-color: rgb(235, 219, 198);">
+        <nav class="container-fluid d-flex justify-content-between py-4">
+            <div class="logo ms-4">
+                <img src="/assets/images/forum_icon.png" alt="Logo"/>
+            </div>
+            <!-- if user authenticated it show logout and image -->
+            <div class="side d-flex justify-content-between col-3 me-3">
+            {% if user.is_authenticated %}
+                    <p class="align-self-end " style="font-size: 20px; font-weight:600;">Welcome {{user_profile.user.username}}</p>
+                    <img class="me-5" src="{{ user_profile.imageURL }}" alt="" style="width: 50px; height: 50px; border-radius: 25px;"> 
+                    
+                    <button class="btn  btn-danger " >
+                        <a href="/logout" style="text-decoration: none; color:aliceblue;">Log out</a>
+                    </button>
+                    
+            {% else %}e
                 <button>
-                    <a href="/logout">Log out</a>
+                    <a href="/signin">Signin</a>
                 </button>
-        {% else %}
-            <button>
-                <a href="/signin">Signin</a>
-            </button>
-            <button>
-                <a href="/signup">Signup</a>
-            </button>
-                <!-- <h3>user.username</h3> --> 
-        {% endif %}
-        </div>
-    </nav>
-    {% block content %}
-    {% for category in category %}
-        <div class="card container mx-auto">
-        <div class="image"></div>
-        <div class="content">
-            <a href="#">
-                <span class="title">
-                    {{category.name}}
-                </span>
-            </a>
-    
-            <p class="desc">
-                {{category.description}}
-            </p>
-    
-            <a class="action" href="#">
-                Find out more
-                <span aria-hidden="true">
-                    →
-                </span>
-            </a>
-        </div>
+                <button>
+                    <a href="/signup">Signup</a>
+                </button>
+                    <!-- <h3>user.username</h3> --> 
+            {% endif %}
+            </div>
+        </nav>
+    </header>
+    <div class="container mt-4">
+        <button class="create">
+            <span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24"><path fill="none" d="M0 0h24v24H0z"></path><path fill="currentColor" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"></path></svg> <a href="{% url 'upload_post' %}">Create Post</a>
+            </span>
+        </button>
     </div>
-    {% endfor %}
+    
+    {% block content %}
+    <div class="container d-flex my-5">
+        {% for category in category %}
+            <div class="card container  mb-2 col-4">
+            <div class="image">
+                <img src="{{ category.imageURL }}" alt="" style="width: 275px; height: 275px; ">
+            </div>
+            <div class="content">
+                <a href="{% url 'posts_by_category' category.name %}">
+                    <span class="title">
+                        {{category.name|pluralize}}
+                    </span>
+                </a>
+        
+                <p class="desc">
+                    {{category.description}}
+                </p>
+        
+                <a class="action" href="{% url 'posts_by_category' category.name %}">
+                    Find out more
+                    <span aria-hidden="true">
+                        →
+                    </span>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
     {% endblock content %}
 </body>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4" crossorigin="anonymous"></script>
