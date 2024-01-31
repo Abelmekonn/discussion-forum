@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+import uuid
+from datetime import datetime
+from django.core.exceptions import PermissionDenied
 
 User=get_user_model()
 # Create your models here.
@@ -24,9 +27,18 @@ class Profile(models.Model):
 class Category(models.Model):
     name = models.CharField(max_length=100)
     description=models.CharField(max_length=250,blank=True,null=True)
+    category_img=models.ImageField(upload_to='category_images',default='blank-profile-picture.png')
 
     def __str__(self):
         return self.name
+    
+    @property
+    def imageURL(self):
+        try:
+            url=self.category_img.url
+        except:
+            url=''
+        return url
 
 class DiscussionThread(models.Model):
     title = models.CharField(max_length=200)
@@ -34,12 +46,18 @@ class DiscussionThread(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    def create(self, title, creator):
 
+        if not creator.has_perm('forum.create_thread'):
+            raise PermissionDenied
+
+        return super().create(title, creator)
     def __str__(self):
         return self.title
 
-# post which is have forginkey catagory
 class Post(models.Model):
+    id=models.UUIDField(primary_key=True,default=uuid.uuid4)
+    title=models.CharField(max_length=200)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     creator = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -47,17 +65,14 @@ class Post(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     post_img=models.ImageField(upload_to='post_images',default='blank-profile-picture.png')
     
-    
-    def __str__(self) -> str:
-        return self.creator.username
     @property
     def imageURL(self):
         try:
-            url=self.Post_img.url
+            url = self.post_img.url  
         except:
-            url=''
+            url = ''
         return url
-
+    
     def __str__(self):
         return self.content
 
